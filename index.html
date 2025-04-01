@@ -24,7 +24,7 @@
     <script type="module">
         // Firebase-Module importieren
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         // Firebase-Konfiguration
         const firebaseConfig = {
@@ -48,10 +48,19 @@
             async function loadGames() {
                 gameList.innerHTML = "";
                 const querySnapshot = await getDocs(collection(db, "games"));
-                querySnapshot.forEach((doc) => {
-                    const game = doc.data();
+                querySnapshot.forEach((docSnapshot) => {
+                    const game = docSnapshot.data();
+                    const gameId = docSnapshot.id; // Die ID des Spiels in Firestore
                     const li = document.createElement("li");
-                    li.innerHTML = `<strong>${game.name}</strong> - <a href="${game.link}" target="_blank">Steam-Link</a> - Kategorie: ${game.category}<br>Notizen: ${game.notes}<br><img src="${game.imageUrl}" alt="${game.name}" width="100">`;
+                    li.classList.add(game.category); // Füge die Kategorie als Klasse hinzu
+                    li.innerHTML = `
+                        <strong>${game.name}</strong> - <a href="${game.link}" target="_blank">Steam-Link</a> - Kategorie: ${game.category}<br>
+                        Notizen: ${game.notes}<br>
+                        <img src="${game.imageUrl}" alt="${game.name}" width="100"><br>
+                        <button onclick="toggleGameStatus('${gameId}', '${game.category}')">
+                            Markiere als ${game.category === 'Gespielt' ? 'Nicht durchgespielt' : 'Durchgespielt'}
+                        </button>
+                    `;
                     gameList.appendChild(li);
                 });
             }
@@ -85,18 +94,4 @@
 
             // Lade das Spielbild von der Steam-API
             async function fetchSteamGameImage(steamId) {
-                const url = `https://store.steampowered.com/api/appdetails?appids=${steamId}`;
-                const response = await fetch(url);
-                const data = await response.json();
-                if (data[steamId] && data[steamId].data && data[steamId].data.header_image) {
-                    return data[steamId].data.header_image;
-                } else {
-                    return "https://via.placeholder.com/100"; // Standardbild, falls kein Bild gefunden wird
-                }
-            }
-
-            loadGames();
-        });
-    </script>
-</body>
-</html>
+                const url = `https
