@@ -51,7 +51,7 @@
                 querySnapshot.forEach((doc) => {
                     const game = doc.data();
                     const li = document.createElement("li");
-                    li.innerHTML = `<strong>${game.name}</strong> - <a href="${game.link}" target="_blank">Steam-Link</a> - Kategorie: ${game.category}<br>Notizen: ${game.notes}`;
+                    li.innerHTML = `<strong>${game.name}</strong> - <a href="${game.link}" target="_blank">Steam-Link</a> - Kategorie: ${game.category}<br>Notizen: ${game.notes}<br><img src="${game.imageUrl}" alt="${game.name}" width="100">`;
                     gameList.appendChild(li);
                 });
             }
@@ -63,17 +63,37 @@
                 const gameLink = document.getElementById("gameLink").value;
                 const gameCategory = document.getElementById("gameCategory").value;
                 const gameNotes = document.getElementById("gameNotes").value;
-                
+
+                // Extrahiere die Steam ID aus dem Link
+                const steamId = gameLink.split("/")[4]; // Beispiel: https://store.steampowered.com/app/123456/ -> ID = 123456
+
+                // Lade das Spielbild von Steam
+                const gameImageUrl = await fetchSteamGameImage(steamId);
+
+                // Speichere das Spiel in Firestore
                 await addDoc(collection(db, "games"), {
                     name: gameName,
                     link: gameLink,
                     category: gameCategory,
-                    notes: gameNotes
+                    notes: gameNotes,
+                    imageUrl: gameImageUrl // Bild-URL hier hinzufügen
                 });
 
                 gameForm.reset();
                 loadGames();
             });
+
+            // Lade das Spielbild von der Steam-API
+            async function fetchSteamGameImage(steamId) {
+                const url = `https://store.steampowered.com/api/appdetails?appids=${steamId}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                if (data[steamId] && data[steamId].data && data[steamId].data.header_image) {
+                    return data[steamId].data.header_image;
+                } else {
+                    return "https://via.placeholder.com/100"; // Standardbild, falls kein Bild gefunden wird
+                }
+            }
 
             loadGames();
         });
