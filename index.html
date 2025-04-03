@@ -22,6 +22,27 @@
     <ul id="gameList"></ul>
 
     <script type="module">
+       async function fetchSteamGameImage(steamId) {
+    if (!steamId) return "https://via.placeholder.com/100"; // Falls keine ID vorhanden ist
+
+    try {
+        const url = `https://store.steampowered.com/api/appdetails?appids=${steamId}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data[steamId] && data[steamId].success && data[steamId].data.header_image) {
+            return data[steamId].data.header_image;
+        } else {
+            console.warn(`Kein Bild für Steam-ID ${steamId} gefunden.`);
+            return "https://via.placeholder.com/100"; // Standardbild, wenn kein Bild gefunden wird
+        }
+    } catch (error) {
+        console.error("Fehler beim Laden des Steam-Bildes:", error);
+        return "https://via.placeholder.com/100"; // Standardbild bei Fehlern
+    }
+}
+
+        
         // Firebase-Module importieren
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
