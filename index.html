@@ -142,16 +142,27 @@
             });
 
             // Lade das Spielbild von der Steam-API
-            async function fetchSteamGameImage(steamId) {
-                const url = `https://corsproxy.io/?${encodeURIComponent(`https://store.steampowered.com/api/appdetails?appids=${steamId}`)}`;
-                const response = await fetch(url);
-                const data = await response.json();
-                if (data[steamId] && data[steamId].data && data[steamId].data.header_image) {
-                    return data[steamId].data.header_image;
-                } else {
-                    return "https://via.placeholder.com/100"; // Standardbild, falls kein Bild gefunden wird
-                }
-            }
+           async function fetchSteamGameImage(steamId) {
+    if (!steamId) return "https://via.placeholder.com/100";
+
+    try {
+        const url = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://store.steampowered.com/api/appdetails?appids=${steamId}`)}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        const parsedData = JSON.parse(data.contents); // Steam API-Daten extrahieren
+
+        if (parsedData[steamId] && parsedData[steamId].success && parsedData[steamId].data.header_image) {
+            return parsedData[steamId].data.header_image;
+        } else {
+            console.warn(`Kein Bild für Steam-ID ${steamId} gefunden.`);
+            return "https://via.placeholder.com/100";
+        }
+    } catch (error) {
+        console.error("Fehler beim Laden des Steam-Bildes:", error);
+        return "https://via.placeholder.com/100";
+    }
+}
+
 
             // Status eines Spiels umschalten (durchgespielt oder nicht)
             window.toggleGameStatus = async function(gameId, currentCategory) {
