@@ -54,7 +54,31 @@
                     const game = docSnapshot.data();
                     const gameId = docSnapshot.id; // Die ID des Spiels in Firestore
                     const li = document.createElement("li");
-                    li.classList.add(game.category); // Füge die Kategorie als Klasse hinzu
+                  async function loadGames() {
+    gameList.innerHTML = ""; // Clear existing list
+
+    const querySnapshot = await getDocs(collection(db, "games"));
+    querySnapshot.forEach((docSnapshot) => {
+        const game = docSnapshot.data();
+        const gameId = docSnapshot.id;
+        const li = document.createElement("li");
+
+        // Fix: Ersetze Leerzeichen durch "-" für gültige CSS-Klassen
+        li.classList.add(game.category.replace(/\s+/g, "-"));
+
+        li.innerHTML = `
+            <strong>${game.name}</strong> - <a href="${game.link}" target="_blank">Steam-Link</a> - Kategorie: ${game.category}<br>
+            Notizen: ${game.notes}<br>
+            <img src="${game.imageUrl}" alt="${game.name}" width="100"><br>
+            <button onclick="toggleGameStatus('${gameId}', '${game.category}')">
+                Markiere als ${game.category === 'Gespielt' ? 'Nicht durchgespielt' : 'Durchgespielt'}
+            </button>
+        `;
+
+        gameList.appendChild(li);
+    });
+}
+
 
                     li.innerHTML = `
                         <strong>${game.name}</strong> - <a href="${game.link}" target="_blank">Steam-Link</a> - Kategorie: ${game.category}<br>
